@@ -38,15 +38,24 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
+        u = User(
+        email="test@test.com",
+        username="testuser",
+        password="hashedpass"
+        )
+
+        db.session.add(u)
+        db.session.commit()
+
         self.client = app.test_client()
 
     def test_user_model(self):
         """Does basic model work?"""
 
         u = User(
-            email="test@test.com",
-            username="testuser",
-            password="HASHED_PASSWORD"
+            email="test2@test.com",
+            username="testuser2",
+            password="hashedpass2"
         )
 
         db.session.add(u)
@@ -55,3 +64,58 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+
+    def test_user_signup_get(self):
+
+        resp = self.client.get('/signup')
+        html = resp.get_data(as_text = True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('name="csrf_token"', html)
+        self.assertIn('name="username"', html)
+        self.assertIn('name="password"', html)
+
+    def test_user_signup_post(self):
+        # Make a GET request to get the CSRF token
+        response = self.client.get('/signup')
+        self.assertEqual(response.status_code, 200)
+
+        # Extract the CSRF token from the response data
+        csrf_token = response.form['csrf_token']
+
+        # Prepare form data including the CSRF token
+        form_data = {
+            'csrf_token': csrf_token,
+            'email': 'test2@test.com',
+            'username': 'testuser2',
+            'password': 'actualpassword'
+        }
+
+        # Post the form data to the signup route
+        response = self.client.post('/signup', data=form_data, follow_redirects=True)
+
+        # Check the response status code
+        self.assertEqual(response.status_code, 200)
+
+        # Check if the user was created in the database
+        user = User.query.filter_by(username='testuser2').first()
+        self.assertIsNotNone(user)
+        # self.assertEqual(user.email, 'test2@test.com' )
+
+    # def test_user_signup_post_bad(self):
+    #     d = {'email' : 'test@test.com', 'username' : 'testuser', 'password' : 'hashedpass2'}
+    #     resp = self.client.post('/signup', data = d, follow_redirects = True)
+    #     html = resp.get_data(as_text=True)
+
+    #     self.assertEqual(resp.status_code, 200)
+    #     self.assertIn('Username already taken', html )
+
+    def test_user_login_get(self):
+
+        resp = self.client.get('/login')
+        html = resp.get_data(as_text = True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('name="csrf_token"', html)
+        self.assertIn('name="username"', html)
+        self.assertIn('name="password"', html)

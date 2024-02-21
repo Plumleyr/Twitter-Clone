@@ -120,7 +120,7 @@ def logout():
 
     do_logout()
     flash("Logged Out", "success")
-    redirect(url_for('login'))
+    return redirect(url_for('login'))
 
 ##############################################################################
 # General user routes:
