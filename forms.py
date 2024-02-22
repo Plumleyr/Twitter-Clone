@@ -33,3 +33,9 @@ class UserEditForm(FlaskForm):
     header_image_url = StringField('(Optional) Image URL')
     bio = StringField('(Optional) Bio')
     password = PasswordField('Password', validators=[Length(min=6)])
+
+class UserEditPasswordForm(FlaskForm):
+
+    password = PasswordField('Password', validators = [Length(min=6)])
+    new_password = PasswordField('New Password', validators = [Length(min=6)])
+    reenter_new_password = PasswordField('Re-Enter New Password', validators = [Length(min=6)])

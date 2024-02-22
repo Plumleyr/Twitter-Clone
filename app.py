@@ -335,7 +335,7 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    msg = Message.query.get(message_id)
+    msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg)
 
 
@@ -348,10 +348,19 @@ def messages_destroy(message_id):
         return redirect("/")
 
     msg = Message.query.get(message_id)
-    db.session.delete(msg)
-    db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+    msg_user = msg.user
+
+    if g.user.id == msg_user.id:
+        db.session.delete(msg)
+        db.session.commit()
+        
+        flash("Message Delete", "success")
+        return redirect(f"/users/{g.user.id}")
+    else:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
 
 
 ##############################################################################
