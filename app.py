@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm, UserEditPasswordForm
 from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
@@ -305,6 +305,29 @@ def show_likes(user_id):
                 .all())
 
     return render_template('users/likes.html', user = user, messages = messages)
+
+@app.route("/users/password", methods = ["GET", "POST"])
+def change_password():
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UserEditPasswordForm()
+    if form.validate_on_submit():
+        user = User.authenticate(g.user.username,
+                                form.password.data)
+        if user:
+            new_password = User.hash_pass(form.new_password.data)
+            print(new_password)
+            user.password = new_password
+            db.session.commit()
+            flash("Password Updated", "success")
+            return redirect(url_for('users_show', user_id = g.user.id))
+        else:
+            flash("Incorrect Information Entered", "danger")
+            return redirect(url_for('users_show', user_id = g.user.id))
+
+    return render_template('users/editpass.html', form = form)
 ##############################################################################
 # Messages routes:
 

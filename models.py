@@ -171,7 +171,8 @@ class User(db.Model):
 
     @classmethod
     def hash_pass(cls, password):
-        hashed_pwd= bcrypt.generate_password_hash(password.decode('UTF-8'))
+        hashed_pwd= bcrypt.generate_password_hash(password)
+        return hashed_pwd.decode('UTF-8')
 
 
 class Message(db.Model):
